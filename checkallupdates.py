@@ -92,7 +92,6 @@ for line in repo_update_text.splitlines():
 # call that grabs the info for all packages being updated
 pkg_repo, pkg_netup_size, pkg_down_size = \
     packageRepositories([update[1] for update in package_update])
-print(len(package_update), len(pkg_netup_size))
 for i in range(len(package_update)):
     package_update[i][0] = pkg_repo[i]
     package_update[i][4] = str(round(pkg_netup_size[i], 2))
