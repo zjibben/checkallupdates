@@ -31,14 +31,6 @@ def table (header, alignment, data):
 # return a list with certain elements removed
 def removeOccurances (the_list, forbidden): return [x for x in the_list if x not in forbidden]
 
-def sizeToMiB (size):
-    if   (size[1]==  "B"): sizeMiB = float(size[0])/1024**2
-    elif (size[1]=="KiB"): sizeMiB = float(size[0])/1024
-    elif (size[1]=="MiB"): sizeMiB = float(size[0])
-    elif (size[1]=="GiB"): sizeMiB = float(size[0])*1024
-    else:                  print("ERROR ",size)
-    return sizeMiB
-
 # find the repositories associated with a list of packages
 def packageRepositories (pkg):
     # get all package info associated with every package
@@ -53,29 +45,7 @@ def packageRepositories (pkg):
         .split(),
         set(["Repository",":"]))
 
-    # get download size
-    pkg_down_size = []
-    for line in subprocess.Popen(["grep", "Download"],
-                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE) \
-                          .communicate(pkg_info)[0].decode().splitlines():
-        pkg_down_info = removeOccurances(line.split(), set(["Download", "Size", ":"]))
-        pkg_down_size.append(sizeToMiB(pkg_down_info))
-
-    # get net upgrade size
-    pkg_netup_size = []
-    for line in subprocess.Popen(["grep", "Installed Size"],
-                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE) \
-                          .communicate(pkg_info)[0].decode().splitlines():
-        pkg_inst_info = removeOccurances(line.split(), set(["Installed", "Size", ":"]))
-        pkg_netup_size.append(sizeToMiB(pkg_inst_info))
-
-    for i,line in enumerate(subprocess.Popen(["grep", "Installed Size"],
-                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE) \
-                          .communicate(pkg_Qinfo)[0].decode().splitlines()):
-        pkg_inst_info = removeOccurances(line.split(), set(["Installed", "Size", ":"]))
-        pkg_netup_size[i] -= sizeToMiB(pkg_inst_info)
-    
-    return pkg_repo, pkg_netup_size, pkg_down_size
+    return pkg_repo
 
 # main body
 package_update = []
@@ -84,26 +54,23 @@ package_update = []
 repo_update_text = subprocess.Popen("checkupdates", stdout=subprocess.PIPE).stdout.read().decode()
 for line in repo_update_text.splitlines():
     pkgname, pkgverold, _, pkgvernew = line.split()
-    package_update.append([None, pkgname, pkgverold, pkgvernew, None, None])
+    package_update.append([None, pkgname, pkgverold, pkgvernew])
 
 # figure out which repo every package belongs to
 # do this for all the packages at once, rather than in the loop above,
 # because many calls to pacman ends up being much slower than one big
 # call that grabs the info for all packages being updated
-pkg_repo, pkg_netup_size, pkg_down_size = \
-    packageRepositories([update[1] for update in package_update])
+pkg_repo = packageRepositories([update[1] for update in package_update])
 for i in range(len(package_update)):
     package_update[i][0] = pkg_repo[i]
-    package_update[i][4] = str(round(pkg_netup_size[i], 2))
-    package_update[i][5] = str(round(pkg_down_size[i],  2))
-
+    
 # look for updates in the AUR
 aur_update_text = subprocess.Popen(["cower", "-u"], stdout=subprocess.PIPE).stdout.read().decode()
 for line in aur_update_text.splitlines():
     _, pkgname, pkgverold, _, pkgvernew = line.split()
     # I don't know how to assess upgrade/download size for AUR packages
     # leaving as None for now
-    package_update.append(["aur", pkgname, pkgverold, pkgvernew, None, None])
+    package_update.append(["aur", pkgname, pkgverold, pkgvernew])
     
 # sort the list first by repo (core, extra, community, multilib, aur), then by package name
 sort_order = {"core": 0, "extra": 1, "community": 2, "multilib": 3, "aur": 4}
@@ -117,17 +84,11 @@ for update in package_update:
 
 # print the data
 print("Software upgrade (new version)\n",
-      table(["Repository", "Package", "Old Version", "New Version",
-             "Net Change (MiB)", "Download Size (MiB)"],
-            ["l", "l", "l", "l", "r", "r"],
+      table(["Repository", "Package", "Old Version", "New Version"],
+            ["l", "l", "l", "l"],
             new_version))
 print()
 print("Package upgrade only (new release)\n",
-      table(["Repository", "Package", "Old Version", "New Version",
-             "Net Change (MiB)", "Download Size (MiB)"],
-            ["l", "l", "l", "l", "r", "r"],
+      table(["Repository", "Package", "Old Version", "New Version"],
+            ["l", "l", "l", "l"],
             new_release))
-
-print()
-print("Net upgrade size:    ",round(sum(pkg_netup_size), 2), "MiB")
-print("Total download size: ",round(sum(pkg_down_size),  2), "MiB")
