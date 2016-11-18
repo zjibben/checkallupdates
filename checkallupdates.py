@@ -8,8 +8,6 @@
 #         size of the new version?
 #
 # dependencies: python-texttable, pacman, cower, grep
-#
-# Zechariah J Jibben <threeofsix@gmail.com> 03/2015
 
 import subprocess, texttable
 
