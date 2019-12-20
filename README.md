@@ -1,3 +1,3 @@
-About
-=====
-Checkallupdates is a program analogous to Arch Linux's `checkupdates`; it just produces a list of available updates for your Arch system. However, unlike `checkupdates` it includes AUR packages, puts everything in nice tables, separates software upgrades from package upgrades similar to Yaourt, and is significantly slower. It depends on `python-texttable` and `cower`.
+# About
+
+`checkallupdates` is a like Arch Linux's `checkupdates`, but it includes AUR packages. It generates a table of available updates for your Arch system, separating software updates from package updates, similar to Yaourt. It depends on `python-texttable` and `yay`.

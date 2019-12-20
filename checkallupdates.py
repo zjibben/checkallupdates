@@ -63,9 +63,11 @@ for i in range(len(package_update)):
     package_update[i][0] = pkg_repo[i]
     
 # look for updates in the AUR
-aur_update_text = subprocess.Popen(["cower", "-u"], stdout=subprocess.PIPE).stdout.read().decode()
+# COULD SWITCH TO $ yay -Qu here? Likely still want checkupdates above
+# to avoid updating the sync database (which requires root).
+aur_update_text = subprocess.Popen(["yay", "-Qmu"], stdout=subprocess.PIPE).stdout.read().decode()
 for line in aur_update_text.splitlines():
-    _, pkgname, pkgverold, _, pkgvernew = line.split()
+    pkgname, pkgverold, _, pkgvernew = line.split()
     # I don't know how to assess upgrade/download size for AUR packages
     # leaving as None for now
     package_update.append(["aur", pkgname, pkgverold, pkgvernew])
