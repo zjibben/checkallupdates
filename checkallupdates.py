@@ -56,7 +56,7 @@ def listOfUpdates(command, repo):
     repo_update_text = subprocess.Popen(command, stdout=subprocess.PIPE).stdout.read().decode()
     package_update = []
     for line in repo_update_text.splitlines():
-        pkgname, pkgverold, _, pkgvernew = line.split()
+        pkgname, pkgverold, _, pkgvernew, *_ = line.split()
         package_update.append([repo, pkgname, pkgverold, pkgvernew])
     return package_update
 
