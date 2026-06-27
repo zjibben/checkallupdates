@@ -10,7 +10,8 @@
 #
 # dependencies: python-texttable, pacman, yay, grep
 
-import subprocess, texttable
+import subprocess
+import texttable
 
 
 def isNewVersion(update):
@@ -28,6 +29,12 @@ def table(header, alignment, data):
     t.header(header)
     t.add_rows(data,header=False)
     return t.draw()
+
+
+def upgradeTable(data):
+    return table(["Repository", "Package", "Old Version", "New Version"],
+                 ["l", "l", "l", "l"],
+                 data)
 
 
 def packageRepositories(pkg):
@@ -77,12 +84,5 @@ if __name__=="__main__":
         new_version.append(update) if isNewVersion(update) else new_release.append(update)
 
     # print the data
-    print("Software upgrade (new version)\n",
-          table(["Repository", "Package", "Old Version", "New Version"],
-                ["l", "l", "l", "l"],
-                new_version))
-    print()
-    print("Package upgrade only (new release)\n",
-          table(["Repository", "Package", "Old Version", "New Version"],
-                ["l", "l", "l", "l"],
-                new_release))
+    print("Software upgrade (new version)\n", upgradeTable(new_version), "\n")
+    print("Package upgrade only (new release)\n", upgradeTable(new_release))
